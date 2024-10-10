@@ -4,7 +4,10 @@ pragma solidity 0.8.28;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Voting is Ownable {
-    constructor() Ownable(msg.sender) {}
+    constructor() Ownable(msg.sender) {
+        whitelist[msg.sender].isRegistered = true;
+        emit VoterRegistered(msg.sender);
+    }
 
     struct Voter {
         bool isRegistered;
