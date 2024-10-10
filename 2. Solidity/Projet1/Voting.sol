@@ -52,7 +52,9 @@ contract Voting is Ownable {
         _;
     }
 
-    function authorize(address _address)
+    function authorize(
+        address _address
+    )
         external
         onlyOwner
         checkCurrentStatus(WorkflowStatus.RegisteringVoters)
@@ -81,7 +83,10 @@ contract Voting is Ownable {
         _;
     }
 
-    function registerProposal(address _address, string memory _description)
+    function registerProposal(
+        address _address,
+        string memory _description
+    )
         external
         checkNonZeroAddress(_address)
         isRegisteredVoter(_address)
@@ -108,7 +113,10 @@ contract Voting is Ownable {
         updateStatus(WorkflowStatus.VotingSessionStarted);
     }
 
-    function voteForProposal(address _address, uint256 _proposalId)
+    function voteForProposal(
+        address _address,
+        uint256 _proposalId
+    )
         external
         checkNonZeroAddress(_address)
         isRegisteredVoter(_address)
