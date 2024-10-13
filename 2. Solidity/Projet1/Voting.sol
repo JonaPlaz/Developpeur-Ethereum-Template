@@ -142,26 +142,32 @@ contract Voting is Ownable {
         updateStatus(WorkflowStatus.VotingSessionEnded);
     }
 
-    function findWinningProposalId() private {
-        uint256 maxVotes = 0;
-        for (uint256 i = 0; i < proposalList.length; i++) {
-            if (proposalList[i].voteCount > maxVotes) {
-                maxVotes = proposalList[i].voteCount;
-                winningProposalId = i + 1;
-            }
-        }
-    }
-
     function countVotes()
         external
         onlyOwner
         checkCurrentStatus(WorkflowStatus.VotingSessionEnded)
     {
-        findWinningProposalId();
+        uint256 maxVotes = 0;
+        bool isTie = false;
+        for (uint256 i = 0; i < proposalList.length; i++) {
+            if (proposalList[i].voteCount > maxVotes) {
+                maxVotes = proposalList[i].voteCount;
+                winningProposalId = i + 1;
+                isTie = false;
+            } else if (proposalList[i].voteCount == maxVotes) {
+                isTie = true;
+            }
+        }
+        require(!isTie, "There is a tie !");
         updateStatus(WorkflowStatus.VotesTallied);
     }
 
-    function getWinner() external view returns (Proposal memory) {
+    function getWinner()
+        external
+        view
+        checkCurrentStatus(WorkflowStatus.VotesTallied)
+        returns (Proposal memory)
+    {
         return proposalList[winningProposalId - 1];
     }
 }
