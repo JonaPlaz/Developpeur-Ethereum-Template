@@ -17,12 +17,17 @@ module.exports = {
       url: RPC_URL,
       chainId: 17000,
       accounts: [`0x${PK}`],
+    },
+    hardhat: {
+      forking: {
+        url: RPC_URL,
+      }
     }
   },
   solidity: "0.8.27",
   etherscan: {
     apiKey: {
-      sepolia: ETHERSCAN
+      holesky: ETHERSCAN
     }
   }
 };
