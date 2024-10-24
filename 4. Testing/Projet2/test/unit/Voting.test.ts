@@ -30,6 +30,26 @@ describe("Test Voting Contract", function () {
     });
   });
 
+  describe("Get One Proposal", function () {
+    it("Should revert if voter is not registered", async function () {
+      await expect(deployedContract.getVoter(addr1.address)).to.be.revertedWith("You're not a voter");
+    });
+    it("Should return the correct proposal when called by a registered voter", async function () {
+      await deployedContract.addVoter(owner.address);
+      await deployedContract.startProposalsRegistering();
+      await deployedContract.addProposal("Proposal 1");
+      // index 1 car le la première proposition est GENESIS
+      const proposal = await deployedContract.getOneProposal(1);
+      expect(proposal.description).to.equal("Proposal 1");
+      expect(proposal.voteCount).to.equal(0);
+    });
+    it("Should revert if the proposal ID does not exist", async function () {
+      await deployedContract.addVoter(owner.address);
+      await deployedContract.startProposalsRegistering();
+      await expect(deployedContract.getOneProposal(999)).to.be.reverted;
+    });
+  });
+
   describe("Add voter", function () {
     it("Should add voter without reverting when called by the owner", async function () {
       await expect(deployedContract.connect(owner).addVoter(addr1.address)).to.not.be.reverted;
@@ -209,10 +229,57 @@ describe("Test Voting Contract", function () {
     it("Should emit WorkflowStatusChange event", async function () {
       await deployedContract.startProposalsRegistering();
       await deployedContract.endProposalsRegistering();
-      deployedContract.connect(owner).startVotingSession();
+      await deployedContract.connect(owner).startVotingSession();
       await expect(deployedContract.connect(owner).endVotingSession())
         .to.emit(deployedContract, "WorkflowStatusChange")
         .withArgs(WorkflowStatus.VotingSessionStarted, WorkflowStatus.VotingSessionEnded);
+    });
+  });
+
+  describe("Tally votes", function () {
+    it("Should update status without reverting when called by the owner", async function () {
+      await deployedContract.startProposalsRegistering();
+      await deployedContract.connect(owner).endProposalsRegistering();
+      await deployedContract.connect(owner).startVotingSession();
+      await deployedContract.connect(owner).endVotingSession();
+      await expect(deployedContract.connect(owner).tallyVotes()).to.not.be.reverted;
+    });
+    it("Should revert if a non-owner tries to add a voter", async function () {
+      await expect(deployedContract.connect(addr1).tallyVotes()).to.be.revertedWithCustomError(
+        deployedContract,
+        "OwnableUnauthorizedAccount"
+      );
+    });
+    it("Should revert if status is not equal to VotingSessionEnded", async function () {
+      await expect(deployedContract.connect(owner).tallyVotes()).to.be.revertedWith(
+        "Current status is not voting session ended"
+      );
+    });
+    it("Should emit WorkflowStatusChange event", async function () {
+      await deployedContract.startProposalsRegistering();
+      await deployedContract.endProposalsRegistering();
+      await deployedContract.connect(owner).startVotingSession();
+      await deployedContract.connect(owner).endVotingSession();
+      await expect(deployedContract.connect(owner).tallyVotes())
+        .to.emit(deployedContract, "WorkflowStatusChange")
+        .withArgs(WorkflowStatus.VotingSessionEnded, WorkflowStatus.VotesTallied);
+    });
+    it("Should select the proposal with the most votes as the winner", async function () {
+      await deployedContract.addVoter(owner.address);
+      await deployedContract.addVoter(addr1.address);
+      await deployedContract.addVoter(addr2.address);
+      await deployedContract.startProposalsRegistering();
+      await deployedContract.connect(owner).addProposal("Proposal 1");
+      await deployedContract.connect(addr1).addProposal("Proposal 2");
+      await deployedContract.endProposalsRegistering();
+      await deployedContract.startVotingSession();
+      await deployedContract.connect(owner).setVote(0);
+      await deployedContract.connect(addr1).setVote(1);
+      await deployedContract.connect(addr2).setVote(1);
+      await deployedContract.endVotingSession();
+      await deployedContract.tallyVotes();
+      const winningProposalID = await deployedContract.winningProposalID();
+      expect(winningProposalID).to.equal(1);
     });
   });
 });
