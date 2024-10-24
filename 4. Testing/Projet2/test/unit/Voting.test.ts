@@ -51,6 +51,7 @@ describe("Test Voting Contract", function () {
   });
 
   describe("Add voter", function () {
+    // ne m'améliore pas le coverage, laissé pour l'exemple
     it("Should add voter without reverting when called by the owner", async function () {
       await expect(deployedContract.connect(owner).addVoter(addr1.address)).to.not.be.reverted;
     });
@@ -59,10 +60,6 @@ describe("Test Voting Contract", function () {
         deployedContract,
         "OwnableUnauthorizedAccount"
       );
-    });
-    it("Should status equal to RegisteringVoters", async function () {
-      let status = await deployedContract.workflowStatus();
-      expect(status).to.equal(WorkflowStatus.RegisteringVoters);
     });
     it("Should revert if status is not equal to RegisteringVoters", async function () {
       // change status
@@ -135,9 +132,6 @@ describe("Test Voting Contract", function () {
   });
 
   describe("Start Proposals Registering", function () {
-    it("Should update status without reverting when called by the owner", async function () {
-      await expect(deployedContract.connect(owner).startProposalsRegistering()).to.not.be.reverted;
-    });
     it("Should revert if a non-owner tries to add a voter", async function () {
       await expect(deployedContract.connect(addr1).startProposalsRegistering()).to.be.revertedWithCustomError(
         deployedContract,
@@ -159,10 +153,6 @@ describe("Test Voting Contract", function () {
   });
 
   describe("End Proposals Registering", function () {
-    it("Should update status without reverting when called by the owner", async function () {
-      await deployedContract.startProposalsRegistering();
-      await expect(deployedContract.connect(owner).endProposalsRegistering()).to.not.be.reverted;
-    });
     it("Should revert if a non-owner tries to add a voter", async function () {
       await expect(deployedContract.connect(addr1).endProposalsRegistering()).to.be.revertedWithCustomError(
         deployedContract,
@@ -183,11 +173,6 @@ describe("Test Voting Contract", function () {
   });
 
   describe("Start Voting Session", function () {
-    it("Should update status without reverting when called by the owner", async function () {
-      await deployedContract.startProposalsRegistering();
-      await deployedContract.connect(owner).endProposalsRegistering();
-      await expect(deployedContract.connect(owner).startVotingSession()).to.not.be.reverted;
-    });
     it("Should revert if a non-owner tries to add a voter", async function () {
       await expect(deployedContract.connect(addr1).startVotingSession()).to.be.revertedWithCustomError(
         deployedContract,
@@ -209,12 +194,6 @@ describe("Test Voting Contract", function () {
   });
 
   describe("End Voting Session", function () {
-    it("Should update status without reverting when called by the owner", async function () {
-      await deployedContract.startProposalsRegistering();
-      await deployedContract.connect(owner).endProposalsRegistering();
-      await deployedContract.connect(owner).startVotingSession();
-      await expect(deployedContract.connect(owner).endVotingSession()).to.not.be.reverted;
-    });
     it("Should revert if a non-owner tries to add a voter", async function () {
       await expect(deployedContract.connect(addr1).endVotingSession()).to.be.revertedWithCustomError(
         deployedContract,
@@ -237,13 +216,6 @@ describe("Test Voting Contract", function () {
   });
 
   describe("Tally votes", function () {
-    it("Should update status without reverting when called by the owner", async function () {
-      await deployedContract.startProposalsRegistering();
-      await deployedContract.connect(owner).endProposalsRegistering();
-      await deployedContract.connect(owner).startVotingSession();
-      await deployedContract.connect(owner).endVotingSession();
-      await expect(deployedContract.connect(owner).tallyVotes()).to.not.be.reverted;
-    });
     it("Should revert if a non-owner tries to add a voter", async function () {
       await expect(deployedContract.connect(addr1).tallyVotes()).to.be.revertedWithCustomError(
         deployedContract,
