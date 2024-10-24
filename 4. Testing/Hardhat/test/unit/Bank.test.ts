@@ -2,16 +2,29 @@ import { expect, assert } from "chai";
 import hre from "hardhat";
 import { Bank } from "../../typechain-types";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
 describe("Test Bank Contract", function () {
   let deployedContract: Bank;
   let owner: HardhatEthersSigner, addr1: HardhatEthersSigner, addr2: HardhatEthersSigner;
 
+  async function deployBankFixture() {
+    [owner, addr1, addr2] = await hre.ethers.getSigners();
+    const Bank = await hre.ethers.deployContract("Bank");
+    deployedContract = Bank;
+    return { deployedContract, owner, addr1, addr2 };
+  }
+
+  async function deployBankWithDepositFixture() {
+    const { deployedContract, owner, addr1, addr2 } = await loadFixture(deployBankFixture);
+    let weiQuantity = hre.ethers.parseEther("0.19");
+    let transaction = await deployedContract.deposit({ value: weiQuantity });
+    return { deployedContract, owner, addr1, addr2 };
+  }
+
   describe("Initialization", function () {
     beforeEach(async function () {
-      [owner, addr1, addr2] = await hre.ethers.getSigners();
-      const Bank = await hre.ethers.deployContract("Bank");
-      deployedContract = Bank;
+      ({ deployedContract, owner, addr1, addr2 } = await loadFixture(deployBankFixture));
     });
 
     it("Should deploy the contract and get the Owner", async function () {
@@ -22,10 +35,7 @@ describe("Test Bank Contract", function () {
 
   describe("Deposit", function () {
     beforeEach(async function () {
-      [owner, addr1, addr2] = await hre.ethers.getSigners();
-      const Bank = await hre.ethers.deployContract("Bank");
-      deployedContract = Bank;
-      console.log(deployedContract.target); // Address of the contract
+      ({ deployedContract, owner, addr1, addr2 } = await loadFixture(deployBankFixture));
     });
 
     it("should NOT deposit Ethers on the Bank contract if NOT the Owner", async function () {
@@ -56,13 +66,7 @@ describe("Test Bank Contract", function () {
 
   describe("Withdraw", function () {
     beforeEach(async function () {
-      [owner, addr1, addr2] = await hre.ethers.getSigners();
-      const Bank = await hre.ethers.deployContract("Bank");
-      deployedContract = Bank;
-
-      let weiQuantity = hre.ethers.parseEther("0.19");
-      let transaction = await deployedContract.deposit({ value: weiQuantity });
-      await transaction.wait(); // === transaction.wait(1);
+      ({ deployedContract, owner, addr1, addr2 } = await loadFixture(deployBankWithDepositFixture));
     });
 
     it("should not Withdraw if NOT the Owner", async function () {
