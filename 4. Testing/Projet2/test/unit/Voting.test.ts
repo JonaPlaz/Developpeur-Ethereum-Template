@@ -45,7 +45,7 @@ describe("Test Voting Contract", function () {
 
   describe("Get One Proposal", function () {
     it("Should revert if voter is not registered", async function () {
-      await expect(deployedContract.getVoter(addr1.address)).to.be.revertedWith("You're not a voter");
+      await expect(deployedContract.getOneProposal(1)).to.be.revertedWith("You're not a voter");
     });
     it("Should return the GENESIS proposal", async function () {
       await deployedContract.addVoter(owner.address);
@@ -107,7 +107,7 @@ describe("Test Voting Contract", function () {
 
   describe("Add proposal", function () {
     it("Should revert if voter is not registered", async function () {
-      await expect(deployedContract.getVoter(addr1.address)).to.be.revertedWith("You're not a voter");
+      await expect(deployedContract.addProposal("Proposal 1")).to.be.revertedWith("You're not a voter");
     });
     it("Should revert if workflow status is not ProposalsRegistrationStarted", async function () {
       await deployedContract.connect(owner).addVoter(addr1.address);
@@ -134,7 +134,7 @@ describe("Test Voting Contract", function () {
 
   describe("Set vote", function () {
     it("Should revert if voter is not registered", async function () {
-      await expect(deployedContract.getVoter(addr1.address)).to.be.revertedWith("You're not a voter");
+      await expect(deployedContract.setVote(0)).to.be.revertedWith("You're not a voter");
     });
     it("Should revert if workflow status is not VotingSessionStarted", async function () {
       await deployedContract.connect(owner).addVoter(addr1.address);
