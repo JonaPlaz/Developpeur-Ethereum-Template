@@ -3,7 +3,6 @@ import hre from "hardhat";
 import { Voting } from "../../typechain-types";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import exp from "constants";
 
 let deployedContract: Voting;
 let owner: HardhatEthersSigner, addr1: HardhatEthersSigner, addr2: HardhatEthersSigner;
