@@ -2,6 +2,8 @@ import { expect, assert } from "chai";
 import hre from "hardhat";
 import { Voting } from "../../typechain-types";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import exp from "constants";
 
 let deployedContract: Voting;
 let owner: HardhatEthersSigner, addr1: HardhatEthersSigner, addr2: HardhatEthersSigner;
@@ -17,16 +19,27 @@ enum WorkflowStatus {
 
 let workflowStatus: WorkflowStatus;
 
+async function deployVotingFixture() {
+  [owner, addr1, addr2] = await hre.ethers.getSigners();
+  const Voting = await hre.ethers.deployContract("Voting");
+  deployedContract = Voting;
+  return { deployedContract, owner, addr1, addr2 };
+}
+
 describe("Test Voting Contract", function () {
   beforeEach(async function () {
-    [owner, addr1, addr2] = await hre.ethers.getSigners();
-    const Voting = await hre.ethers.deployContract("Voting");
-    deployedContract = Voting;
+    await loadFixture(deployVotingFixture);
   });
 
-  describe("Get voters", function () {
+  describe("Get voter", function () {
     it("Should revert if voter is not registered", async function () {
       await expect(deployedContract.getVoter(addr1.address)).to.be.revertedWith("You're not a voter");
+    });
+    it("Should return the correct voter information for a registered voter", async function () {
+      await deployedContract.connect(owner).addVoter(owner.address);
+      await deployedContract.connect(owner).addVoter(addr1.address);
+      const voter = await deployedContract.getVoter(addr1.address);
+      expect(voter.isRegistered).to.equal(true);
     });
   });
 
@@ -34,7 +47,13 @@ describe("Test Voting Contract", function () {
     it("Should revert if voter is not registered", async function () {
       await expect(deployedContract.getVoter(addr1.address)).to.be.revertedWith("You're not a voter");
     });
-    it("Should return the correct proposal when called by a registered voter", async function () {
+    it("Should return the GENESIS proposal", async function () {
+      await deployedContract.addVoter(owner.address);
+      await deployedContract.startProposalsRegistering();
+      const proposal = await deployedContract.getOneProposal(0);
+      expect(proposal.description).to.equal("GENESIS");
+    });
+    it("Should return the correct proposal", async function () {
       await deployedContract.addVoter(owner.address);
       await deployedContract.startProposalsRegistering();
       await deployedContract.addProposal("Proposal 1");
@@ -96,6 +115,13 @@ describe("Test Voting Contract", function () {
         "Proposals are not allowed yet"
       );
     });
+    it("Should revert if proposal is empty string", async function () {
+      await deployedContract.connect(owner).addVoter(addr1.address);
+      await deployedContract.startProposalsRegistering();
+      await expect(deployedContract.connect(addr1).addProposal("")).to.be.revertedWith(
+        "Vous ne pouvez pas ne rien proposer"
+      );
+    });
     it("Should emit ProposalRegistered event", async function () {
       await deployedContract.connect(owner).addVoter(addr1.address);
       await deployedContract.startProposalsRegistering();
@@ -121,6 +147,13 @@ describe("Test Voting Contract", function () {
       await deployedContract.startVotingSession();
       await deployedContract.connect(addr1).setVote(0);
       await expect(deployedContract.connect(addr1).setVote(0)).to.be.revertedWith("You have already voted");
+    });
+    it("Should revert if _id < proposalsArray length", async function () {
+      await deployedContract.connect(owner).addVoter(addr1.address);
+      await deployedContract.startProposalsRegistering();
+      await deployedContract.endProposalsRegistering();
+      await deployedContract.startVotingSession();
+      await expect(deployedContract.connect(addr1).setVote(1)).to.be.revertedWith("Proposal not found");
     });
     it("Should emit Voted event", async function () {
       await deployedContract.connect(owner).addVoter(addr1.address);
@@ -236,7 +269,7 @@ describe("Test Voting Contract", function () {
         .to.emit(deployedContract, "WorkflowStatusChange")
         .withArgs(WorkflowStatus.VotingSessionEnded, WorkflowStatus.VotesTallied);
     });
-    it("Should select the proposal with the most votes as the winner", async function () {
+    it("Should select the proposal with the most votes", async function () {
       await deployedContract.addVoter(owner.address);
       await deployedContract.addVoter(addr1.address);
       await deployedContract.addVoter(addr2.address);
@@ -252,6 +285,19 @@ describe("Test Voting Contract", function () {
       await deployedContract.tallyVotes();
       const winningProposalID = await deployedContract.winningProposalID();
       expect(winningProposalID).to.equal(1);
+    });
+    it("Should select GENESIS (id : 0) if no votes", async function () {
+      await deployedContract.addVoter(owner.address);
+      await deployedContract.addVoter(addr1.address);
+      await deployedContract.startProposalsRegistering();
+      await deployedContract.connect(owner).addProposal("Proposal 1");
+      await deployedContract.connect(addr1).addProposal("Proposal 2");
+      await deployedContract.endProposalsRegistering();
+      await deployedContract.startVotingSession();
+      await deployedContract.endVotingSession();
+      await deployedContract.tallyVotes();
+      const winningProposalID = await deployedContract.winningProposalID();
+      expect(winningProposalID).to.equal(0);
     });
   });
 });
