@@ -56,7 +56,6 @@ describe("Test Voting Contract", function () {
       await deployedContract.addVoter(owner.address);
       await deployedContract.startProposalsRegistering();
       await deployedContract.addProposal("Proposal 1");
-      // index 1 car le la première proposition est GENESIS
       const proposal = await deployedContract.getOneProposal(1);
       expect(proposal.description).to.equal("Proposal 1");
       expect(proposal.voteCount).to.equal(0);
@@ -69,7 +68,7 @@ describe("Test Voting Contract", function () {
   });
 
   describe("Add voter", function () {
-    // ne m'améliore pas le coverage, laissé pour l'exemple
+    // n'améliore pas le coverage, laissé pour l'exemple
     it("Should add voter without reverting when called by the owner", async function () {
       await expect(deployedContract.connect(owner).addVoter(addr1.address)).to.not.be.reverted;
     });
@@ -80,7 +79,6 @@ describe("Test Voting Contract", function () {
       );
     });
     it("Should revert if status is not equal to RegisteringVoters", async function () {
-      // change status
       await deployedContract.startProposalsRegistering();
       await expect(deployedContract.connect(owner).addVoter(addr1.address)).to.be.revertedWith(
         "Voters registration is not open yet"
@@ -171,7 +169,6 @@ describe("Test Voting Contract", function () {
       );
     });
     it("Should revert if status is not equal to RegisteringVoters", async function () {
-      // change status
       await deployedContract.startProposalsRegistering();
       await expect(deployedContract.connect(owner).startProposalsRegistering()).to.be.revertedWith(
         "Registering proposals cant be started now"
