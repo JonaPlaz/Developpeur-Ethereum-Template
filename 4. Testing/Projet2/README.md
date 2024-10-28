@@ -16,34 +16,54 @@ npx hardhat ignition deploy ./ignition/modules/Lock.ts
 ## Description des tests
 Les tests sont organisés en différentes sections correspondant aux fonctionnalités principales du contrat Voting :
 
+0. Déploiement du contrat
 1. Get Voter
-Vérifie que seul un électeur enregistré peut consulter son statut.
-Assure que les informations renvoyées pour un électeur enregistré sont correctes.
+- Vérifie que seul un électeur enregistré récupérer les informations d'un voter.
+- Confirme que le voter est bien enregistré.
 2. Get One Proposal
-Vérifie qu'un électeur non enregistré ne peut pas accéder aux propositions.
-Assure que la proposition de base (GENESIS) est correctement renvoyée au début du processus.
-Valide que les propositions sont bien récupérables par leur ID.
+- Vérifie que seul un électeur enregistré récupérer les informations d'un voter.
+- Confirme que la première proposal par défaut est "GENESIS".
+- Confirme que les infos de la proposal appelée sont correctes.
+- vérifie l'id de la proposal.
 3. Add Voter
-Assure que seul le propriétaire peut ajouter un électeur.
-Vérifie que l'ajout d'un électeur n'est possible que pendant la phase d'enregistrement des électeurs.
-Valide l'enregistrement correct d'un électeur et vérifie que l'ajout répété est interdit.
+- Assure que seul le propriétaire peut ajouter un électeur.
+- Vérifie que l'ajout d'un électeur n'est possible que pendant la phase d'enregistrement des électeurs.
+- Vérifie que l'ajout répété d'un électeur est interdit.
+- Vérifie que l'évènement VoterRegistered est emit.
 4. Add Proposal
-Vérifie que seul un électeur peut ajouter une proposition.
-Assure que les propositions ne peuvent être soumises que pendant la période d'enregistrement des propositions.
-Empêche les propositions vides.
+- Vérifie que seul un électeur peut ajouter une proposal.
+- Assure que les proposals ne peuvent être soumises que pendant la période d'enregistrement des proposals.
+- Empêche les proposals vides.
+- Vérifie que l'évènement ProposalRegistered est emit.
 5. Set Vote
-Assure que seul un électeur peut voter et que le vote ne peut se faire que pendant la session de vote.
-Empêche un électeur de voter plusieurs fois.
-Vérifie qu’un vote pour une proposition non existante est rejeté.
-6. Phase Management
-Start Proposals Registering : Assure que seul le propriétaire peut démarrer l'enregistrement des propositions.
-End Proposals Registering : Vérifie que l'enregistrement des propositions se termine correctement.
-Start Voting Session : Assure que seul le propriétaire peut démarrer la session de vote.
-End Voting Session : Vérifie que la session de vote se termine correctement.
-Tally Votes : Assure que seul le propriétaire peut comptabiliser les votes et sélectionne la proposition avec le plus grand nombre de voix.
+- Assure que seul un électeur peut voter
+- Vérifie que le vote ne peut se faire que pendant la session de vote.
+- Empêche un électeur de voter plusieurs fois.
+- Vérifie qu’un vote pour une proposal non existante est rejeté.
+- Vérifie que l'évènement Voted est emit.
+6. Phase Change Status
+* Start Proposals Registering : 
+- Assure que seul le owner peut démarrer l'enregistrement des proposals.
+- Vérifie que le status avant l'update du status
+- Vérifie que l'évènement du changement de status est emit
+* End Proposals Registering : 
+- Vérifie que l'enregistrement des proposals se termine correctement.
+- Vérifie que le status avant l'update du status
+- Vérifie que l'évènement du changement de status est emit.
+* Start Voting Session : 
+- Assure que seul le propriétaire peut démarrer la session de vote.
+- Vérifie que le status avant l'update du status
+- Vérifie que l'évènement du changement de status est emit.
+* End Voting Session : 
+- Vérifie que la session de vote se termine correctement.
+- Vérifie que le status avant l'update du status
+- Vérifie que l'évènement du changement de status est emit.
 7. Tally Votes
-Valide que la proposition ayant obtenu le plus de votes est déclarée gagnante.
-Assure que la proposition GENESIS est sélectionnée en cas d'absence de vote.
+- Assure que seul le propriétaire peut comptabiliser les votes
+- Vérifie que la session de vote est terminée
+- Vérifie que l'évènement de changement de status est emit.
+- Sélectionne la proposal avec le plus grand nombre de voix.
+- Assure que la proposal GENESIS est sélectionnée en cas d'absence de vote.
 
 ## Objectif des tests
-Ces tests permettent de garantir la sécurité et la fiabilité du processus de vote en s’assurant que seules les personnes autorisées peuvent interagir avec le contrat dans les phases appropriées et que les restrictions sont bien appliquées pour éviter les abus.
+Obtenir un Coverage de 100%.

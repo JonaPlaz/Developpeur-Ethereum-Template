@@ -34,7 +34,7 @@ describe("Test Voting Contract", function () {
     it("Should revert if voter is not registered", async function () {
       await expect(deployedContract.getVoter(addr1.address)).to.be.revertedWith("You're not a voter");
     });
-    it("Should return the correct voter information for a registered voter", async function () {
+    it("Should confirm voter is registered", async function () {
       await deployedContract.connect(owner).addVoter(owner.address);
       await deployedContract.connect(owner).addVoter(addr1.address);
       const voter = await deployedContract.getVoter(addr1.address);
@@ -46,7 +46,7 @@ describe("Test Voting Contract", function () {
     it("Should revert if voter is not registered", async function () {
       await expect(deployedContract.getOneProposal(1)).to.be.revertedWith("You're not a voter");
     });
-    it("Should return the GENESIS proposal", async function () {
+    it("Should return défault proposal is GENESIS", async function () {
       await deployedContract.addVoter(owner.address);
       await deployedContract.startProposalsRegistering();
       const proposal = await deployedContract.getOneProposal(0);
@@ -83,12 +83,6 @@ describe("Test Voting Contract", function () {
       await expect(deployedContract.connect(owner).addVoter(addr1.address)).to.be.revertedWith(
         "Voters registration is not open yet"
       );
-    });
-    it("Should voter is registered", async function () {
-      await deployedContract.connect(owner).addVoter(owner.address);
-      await deployedContract.connect(owner).addVoter(addr1.address);
-      const voter = await deployedContract.getVoter(addr1.address);
-      expect(voter.isRegistered).to.be.true;
     });
     it("Should revert because voter is already registered", async function () {
       await deployedContract.connect(owner).addVoter(owner.address);
