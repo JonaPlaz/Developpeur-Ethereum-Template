@@ -25,6 +25,7 @@ getNumber.addEventListener('click', async function() {
         try {
             const provider = new ethers.BrowserProvider(window.ethereum);
             const contract = new ethers.Contract(contractAddress, contractAbi, provider); // Provider = lire
+            console.log(contract);
             const number = await contract.getMyNumber();
             theNumber.innerHTML = number.toString();
         }
